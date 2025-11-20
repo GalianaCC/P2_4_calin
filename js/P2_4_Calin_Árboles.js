@@ -1,7 +1,8 @@
 /**
- * Código JavaScript FINAL - SOL PLANO Y CUATRO CUADRANTES DE COLOR (RESPONSIVE)
+ * Código JavaScript FINAL - SOL PLANO Y CUATRO CUADRANTES DE COLOR (CONTROL TÁCTIL)
  *
- * El sol ahora adapta su tamaño al tamaño de la ventana.
+ * El sol y la caída de partículas ahora siguen el toque/arrastre del dedo
+ * en dispositivos móviles (usando mouseX/Y).
  */
 
 // ====================================================================
@@ -268,24 +269,26 @@ function setup() {
 function draw() {
     
     // --- LÓGICA DE INTERACCIÓN: POSICIÓN Y CAÍDA DE ÓVALOS (Activa al moverse) ---
+    // La condición ahora detecta movimiento del puntero/toque O movimiento del dispositivo
     if (mouseX !== pmouseX || mouseY !== pmouseY || accelerationX !== 0) {
         isPouring = true;
         
-        // Las posiciones de generación y de luz siguen al cursor/dispositivo
-        if (p5.deviceType === 'mobile' || p5.deviceType === 'tablet' || accelerationX !== 0) {
-            spawnX = map(accelerationX, -10, 10, 0, width);
-            lightX = spawnX;
-            lightY = map(accelerationY, -10, 10, 0, height); 
-        } else {
-            spawnX = mouseX;
-            lightX = mouseX;
-            lightY = mouseY;
-        }
+        // --- MODIFICACIÓN CLAVE PARA EL MÓVIL ---
+        // Se usa siempre mouseX/mouseY para posicionar el sol/caída.
+        // lightX y lightY seguirán al dedo/cursor.
+        spawnX = mouseX;
+        lightX = mouseX;
+        lightY = mouseY;
+        
+        // (Opcional: Si deseas que el spawnX siga la aceleración del dispositivo *además* del toque,
+        // puedes usar una lógica más compleja, pero para el sol y el deslizamiento, esta es la solución.)
+        
     } else {
         isPouring = false;
     }
     
     // --- LÓGICA DE INTERACCIÓN: LUZ/FONDO (Controlado por mouseIsPressed) ---
+    // mouseIsPressed también se activa al tocar y mantener presionado en móvil.
     useDynamicBackground = !mouseIsPressed; 
     
     if (mouseIsPressed) {
