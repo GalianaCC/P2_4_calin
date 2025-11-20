@@ -1,8 +1,7 @@
 /**
- * Código JavaScript FINAL - SOL PLANO Y CUATRO CUADRANTES DE COLOR
+ * Código JavaScript FINAL - SOL PLANO Y CUATRO CUADRANTES DE COLOR (RESPONSIVE)
  *
- * El color de fondo cambia según el cuadrante donde se encuentre el cursor
- * mientras el ratón está presionado.
+ * El sol ahora adapta su tamaño al tamaño de la ventana.
  */
 
 // ====================================================================
@@ -18,6 +17,10 @@ let lightX, lightY;
 let LIGHT_SOURCE_COLOR = '#ffff00'; 
 // useDynamicBackground: true = fondo estático/apagado, false = luz activa/fondo condicional
 let useDynamicBackground = true; 
+
+// AÑADIDO: Radio del sol. Se calculará dinámicamente.
+let SUN_RADIUS; 
+const SUN_SIZE_FACTOR = 0.15; // El radio será el 15% del ancho del lienzo (ajustable)
 
 // --- CONSTANTES DE COLORACIÓN DEL FONDO (Nuevas reglas por cuadrante) ---
 const BG_OFF_COLOR = '#000030';    // Fondo cuando el sol está apagado (Negro muy oscuro)
@@ -169,11 +172,12 @@ function drawLightSource(x, y) {
     noStroke();
 
     const lightColor = color(LIGHT_SOURCE_COLOR);
-    const SUN_RADIUS = 150; 
+    // MODIFICADO: Usa la variable global SUN_RADIUS
+    const diameter = SUN_RADIUS * 2; 
 
     // Dibujar el círculo amarillo plano
     fill(lightColor); 
-    ellipse(x, y, SUN_RADIUS * 2, SUN_RADIUS * 2); 
+    ellipse(x, y, diameter, diameter); 
 }
 
 function resetSimulation() {
@@ -198,20 +202,45 @@ function resetSimulation() {
 // 4. ESTRUCTURA PRINCIPAL DE p5.js
 // ====================================================================
 
+/**
+ * Función auxiliar para centrar el botón en la posición X del lienzo.
+ */
+function centerReplantButton() {
+    // Calcula la posición X para centrar el botón.
+    if (replantButton) {
+        const btnWidth = replantButton.elt.getBoundingClientRect().width;
+        const xPos = (width / 2) - (btnWidth / 2);
+        // Establece la posición. La posición Y (10) se mantiene fija desde la parte superior.
+        replantButton.position(xPos, 10);
+    }
+}
+
+
+function calculateResponsiveSizes() {
+    // 1. Calcula el radio del sol basado en el ancho (lo más pequeño entre ancho y alto para pantallas muy estrechas)
+    SUN_RADIUS = min(width, height) * SUN_SIZE_FACTOR;
+
+    // 2. Recalcula la capa verde
+    const randomYFactor = random(GREEN_Y_MIN_FACTOR, GREEN_Y_MAX_FACTOR);
+    GREEN_LAYER_Y = height * randomYFactor;
+    
+    // 3. Recalcula la cuadrícula
+    columnHeights = new Array(ceil(width / GRID_COLUMN_WIDTH)).fill(height); 
+}
+
+
 function setup() {
     createCanvas(windowWidth, windowHeight); 
     spawnX = width / 2;
     
     colorMode(RGB, 255); 
     
-    columnHeights = new Array(ceil(width / GRID_COLUMN_WIDTH)).fill(height); 
+    // Calcula los tamaños responsivos al inicio
+    calculateResponsiveSizes();
 
-    const randomYFactor = random(GREEN_Y_MIN_FACTOR, GREEN_Y_MAX_FACTOR);
-    GREEN_LAYER_Y = height * randomYFactor;
-    
     // --- CREAR Y CONFIGURAR EL BOTÓN "REPLANT" ---
     replantButton = createButton('Replant');
-    replantButton.position(10, 10); // Posición superior izquierda
+    // Aplicar estilos básicos
     replantButton.style('font-size', '16px');
     replantButton.style('padding', '10px 15px');
     replantButton.style('border-radius', '5px');
@@ -219,6 +248,9 @@ function setup() {
     replantButton.style('background-color', '#fff');
     replantButton.style('border', '2px solid #333');
     replantButton.mousePressed(resetSimulation); // Asignar la función de reinicio
+    
+    // Centrar el botón por primera vez al iniciar
+    centerReplantButton();
     
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
@@ -353,16 +385,16 @@ function draw() {
 }
 
 function windowResized() {
+    // 1. Redimensiona el lienzo
     resizeCanvas(windowWidth, windowHeight);
     
-    // Reiniciar los elementos clave
+    // 2. Recalcula los tamaños responsivos (incluyendo SUN_RADIUS y GREEN_LAYER_Y)
+    calculateResponsiveSizes();
+    
+    // 3. Centra el botón al redimensionar
+    centerReplantButton();
+    
+    // 4. Reinicia las colecciones de partículas (necesario para la coherencia de la cuadrícula de colisión)
     particulasAcumuladas = []; 
     particulasCayendo = []; 
-    columnHeights = new Array(ceil(width / GRID_COLUMN_WIDTH)).fill(height); 
-    
-    const randomYFactor = random(GREEN_Y_MIN_FACTOR, GREEN_Y_MAX_FACTOR);
-    GREEN_LAYER_Y = height * randomYFactor;
-    
-    // Ajustar la posición del botón al redimensionar
-    replantButton.position(10, 10);
 }
